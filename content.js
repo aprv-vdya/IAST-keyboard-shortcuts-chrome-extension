@@ -15,9 +15,7 @@ const iastMap = {
   "h": ["h", "ḥ"]
 };
 
-// Listen on keydown in capture phase
 document.addEventListener("keydown", function(e) {
-
   if (e.ctrlKey || e.metaKey || e.altKey) return;
 
   const el = document.activeElement;
@@ -25,10 +23,8 @@ document.addEventListener("keydown", function(e) {
 
   const isInput = el.tagName === "INPUT" || el.tagName === "TEXTAREA";
   const isEditable = el.isContentEditable;
-
   if (!isInput && !isEditable) return;
 
-  // If backtick is pressed
   if (e.key === "`") {
     if (!lastChar) return;
 
@@ -45,20 +41,28 @@ document.addEventListener("keydown", function(e) {
       newChar = newChar.toUpperCase();
     }
 
-    // Replace in input/textarea
+    // Input / textarea
     if (isInput) {
       const start = el.selectionStart;
-      if (start === 0) return;
-      el.setRangeText(newChar, start - 1, start, "end");
-    } 
-    // Replace in contenteditable
+      const end = el.selectionEnd;
+
+      if (start === 0) {
+        el.value = newChar + el.value;
+        el.setSelectionRange(1, 1);
+      } else {
+        el.setRangeText(newChar, start - 1, start, "end");
+      }
+    }
+
+    // Contenteditable
     else if (isEditable) {
       const sel = window.getSelection();
       if (!sel.rangeCount) return;
-      const range = sel.getRangeAt(0);
 
+      const range = sel.getRangeAt(0);
       const node = range.startContainer;
       const offset = range.startOffset;
+
       if (node.nodeType !== Node.TEXT_NODE || offset === 0) return;
 
       node.textContent =
@@ -73,10 +77,8 @@ document.addEventListener("keydown", function(e) {
     }
 
   } else if (e.key.length === 1) {
-    // Store the last typed character
     lastChar = e.key;
     tickCount = 0;
   }
 
-}, true); // capture phase
-
+}, true); 
