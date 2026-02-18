@@ -19,12 +19,18 @@ document.addEventListener("keydown", function (e) {
 
   const active = document.activeElement;
 
-  if (!active || !(
-      active.tagName === "INPUT" ||
-      active.tagName === "TEXTAREA"
-  )) return;
+  if (!active) return;
 
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+  const isInput =
+    active.tagName === "INPUT" ||
+    active.tagName === "TEXTAREA";
+
+  const isEditable =
+    active.isContentEditable;
+
+  if (!isInput && !isEditable) return;
 
   if (e.key === "`") {
 
@@ -34,7 +40,6 @@ document.addEventListener("keydown", function (e) {
     if (!iastMap[baseLower]) return;
 
     e.preventDefault();
-
     tickCount++;
 
     const forms = iastMap[baseLower];
@@ -44,17 +49,11 @@ document.addEventListener("keydown", function (e) {
       newChar = newChar.toUpperCase();
     }
 
-    const start = active.selectionStart;
-    const end = active.selectionEnd;
-
-    if (start === 0) return;
-
-    active.setRangeText(
-      newChar,
-      start - 1,
-      start,
-      "end"
-    );
+    if (isInput) {
+      replaceInInput(active, newChar);
+    } else if (isEditable) {
+      replaceInContentEditable(newChar);
+    }
 
   } else if (e.key.length === 1) {
     lastChar = e.key;
@@ -62,3 +61,44 @@ document.addEventListener("keydown", function (e) {
   }
 
 });
+
+function replaceInInput(element, newChar) {
+  const start = element.selectionStart;
+  if (start === 0) return;
+
+  element.setRangeText(
+    newChar,
+    start - 1,
+    start,
+    "end"
+  );
+}
+
+function replaceInContentEditable(newChar) {
+
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return;
+
+  const range = selection.getRangeAt(0);
+  if (!range.startContainer) return;
+
+  const node = range.startContainer;
+
+  if (node.nodeType !== Node.TEXT_NODE) return;
+
+  const text = node.textContent;
+  const offset = range.startOffset;
+
+  if (offset === 0) return;
+
+  node.textContent =
+    text.substring(0, offset - 1) +
+    newChar +
+    text.substring(offset);
+
+  range.setStart(node, offset);
+  range.collapse(true);
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
