@@ -1,0 +1,12 @@
+{
+    "manifest_version": 3,
+    "name": "IAST Keyboard",
+    "version": "1.0",
+    "description": "Type IAST diacritics using backtick cycling.",
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+      }
+    ]
+  }
