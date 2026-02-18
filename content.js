@@ -18,6 +18,7 @@ const iastMap = {
 function getTextNodeBeforeCaret() {
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount) return null;
+  if (!sel || !sel.rangeCount) return null;
 
   const range = sel.getRangeAt(0);
   let node = range.startContainer;
@@ -76,13 +77,16 @@ document.addEventListener("keydown", function(e) {
   const isEditable = el.isContentEditable;
   if (!isInput && !isEditable) return;
 
-  if (e.key === "`") {
+  // Treat both a literal backtick and "Dead"/Backquote (on some layouts)
+  const isBacktickKey =
+    e.key === "`" || e.key === "Dead" || e.code === "Backquote";
+
+  if (isBacktickKey) {
     if (!lastChar) return;
 
     const base = lastChar.toLowerCase();
     if (!iastMap[base]) return;
 
-    e.preventDefault();
     tickCount++;
 
     let forms = iastMap[base];
@@ -103,6 +107,8 @@ document.addEventListener("keydown", function(e) {
       } else {
         el.setRangeText(newChar, start - 1, start, "end");
       }
+
+      e.preventDefault();
     }
 
     // Contenteditable
@@ -125,6 +131,8 @@ document.addEventListener("keydown", function(e) {
       range.collapse(true);
       sel.removeAllRanges();
       sel.addRange(range);
+
+      e.preventDefault();
     }
 
   } else if (e.key.length === 1) {
